@@ -1,0 +1,11 @@
+server:
+  port: 8080
+
+app:
+  name: To-Do List Manager (DEV режим)
+  version: 1.0.0-DEV
+
+logging:
+  level:
+    com.example.todolist: DEBUG
+    org.springframework: INFO
