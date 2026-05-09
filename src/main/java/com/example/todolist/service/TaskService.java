@@ -1,6 +1,7 @@
 package com.example.todolist.service;
 
 
+import com.example.todolist.exception.TaskNotFoundException;
 import com.example.todolist.model.Task;
 import com.example.todolist.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +56,7 @@ public class TaskService {
       return cached;
     }
     return taskRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Task не найдена с id: " + id));
+        .orElseThrow(() -> new TaskNotFoundException(id));  // ← ИСПРАВЛЕНО
   }
 
   public List<Task> getAllTasks() {

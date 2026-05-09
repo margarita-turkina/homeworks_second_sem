@@ -1,55 +1,58 @@
 package com.example.todolist.controller;
 
+import com.example.todolist.dto.*;
 import com.example.todolist.model.Task;
 import com.example.todolist.service.TaskService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tasks")
+@RequiredArgsConstructor
 public class TaskController {
 
   private final TaskService taskService;
-
-  @Autowired
-  public TaskController(TaskService taskService) {
-    this.taskService = taskService;
-  }
+  private final TaskMapper taskMapper;
 
   @GetMapping
-  public ResponseEntity<List<Task>> getAllTasks() {
+  public ResponseEntity<List<TaskResponseDto>> getAllTasks() {
     List<Task> tasks = taskService.getAllTasks();
-    return ResponseEntity.ok(tasks);
+    List<TaskResponseDto> response = tasks.stream()
+        .map(taskMapper::toResponseDto)
+        .collect(Collectors.toList());
+    return ResponseEntity.ok(response);
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
-    try {
-      Task task = taskService.getTaskById(id);
-      return ResponseEntity.ok(task);
-    } catch (RuntimeException e) {
-      return ResponseEntity.notFound().build();
-    }
+  public ResponseEntity<TaskResponseDto> getTaskById(@PathVariable Long id) {
+    Task task = taskService.getTaskById(id);
+    return ResponseEntity.ok(taskMapper.toResponseDto(task));
   }
 
   @PostMapping
-  public ResponseEntity<Task> createTask(@RequestBody Task task) {
-    Task created = taskService.createTask(task);
-    return ResponseEntity.status(HttpStatus.CREATED).body(created);
+  public ResponseEntity<TaskResponseDto> createTask(
+      @Validated(OnCreate.class) @RequestBody TaskCreateDto createDto) {
+    Task task = taskMapper.toEntity(createDto);
+    Task saved = taskService.createTask(task);
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(taskMapper.toResponseDto(saved));
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task task) {
-    try {
-      Task updated = taskService.updateTask(id, task);
-      return ResponseEntity.ok(updated);
-    } catch (RuntimeException e) {
-      return ResponseEntity.notFound().build();
-    }
+  public ResponseEntity<TaskResponseDto> updateTask(
+      @PathVariable Long id,
+      @Validated(OnUpdate.class) @RequestBody TaskUpdateDto updateDto) {
+    Task existing = taskService.getTaskById(id);
+    taskMapper.updateEntity(updateDto, existing);
+    Task updated = taskService.updateTask(id, existing);
+    return ResponseEntity.ok(taskMapper.toResponseDto(updated));
   }
 
   @DeleteMapping("/{id}")

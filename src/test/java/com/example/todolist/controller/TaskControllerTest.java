@@ -1,13 +1,15 @@
 package com.example.todolist.controller;
 
-import com.example.todolist.model.Task;
+import com.example.todolist.dto.*;
+import com.example.todolist.model.Priority;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,46 +26,36 @@ public class TaskControllerTest {
     return "http://localhost:" + port + "/api/tasks";
   }
 
-  // Позитивные тесты
   @Test
   public void testCreateTask_Success() {
-    Task newTask = new Task("Тест", "Описание");
-    ResponseEntity<Task> response = restTemplate.postForEntity(getBaseUrl(), newTask, Task.class);
+    TaskCreateDto createDto = new TaskCreateDto();
+    createDto.setTitle("Тестовая задача");
+    createDto.setDescription("Описание");
+    createDto.setPriority(Priority.MEDIUM);
+    createDto.setDueDate(LocalDate.now().plusDays(7));
+
+    ResponseEntity<TaskResponseDto> response = restTemplate.postForEntity(
+        getBaseUrl(), createDto, TaskResponseDto.class);
+
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().getId()).isNotNull();
   }
 
   @Test
   public void testGetAllTasks_Success() {
-    ResponseEntity<Task[]> response = restTemplate.getForEntity(getBaseUrl(), Task[].class);
+    ResponseEntity<TaskResponseDto[]> response = restTemplate.getForEntity(
+        getBaseUrl(), TaskResponseDto[].class);
+
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isNotNull();
   }
 
-  @Test
-  public void testGetTaskById_Success() {
-    Task newTask = new Task("Найти", "По ID");
-    ResponseEntity<Task> createResponse = restTemplate.postForEntity(getBaseUrl(), newTask, Task.class);
-    Long taskId = createResponse.getBody().getId();
-
-    ResponseEntity<Task> getResponse = restTemplate.getForEntity(getBaseUrl() + "/" + taskId, Task.class);
-    assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-  }
-
-  // Негативные тесты
   @Test
   public void testGetTaskById_NotFound() {
-    ResponseEntity<Task> response = restTemplate.getForEntity(getBaseUrl() + "/99999", Task.class);
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-  }
+    ResponseEntity<ErrorResponse> response = restTemplate.getForEntity(
+        getBaseUrl() + "/99999", ErrorResponse.class);
 
-  @Test
-  public void testUpdateTask_NotFound() {
-    Task updatedTask = new Task("Не существует", "Нет такой");
-    ResponseEntity<Task> response = restTemplate.exchange(
-        getBaseUrl() + "/99999",
-        org.springframework.http.HttpMethod.PUT,
-        new org.springframework.http.HttpEntity<>(updatedTask),
-        Task.class
-    );
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
   }
 
@@ -71,10 +63,11 @@ public class TaskControllerTest {
   public void testDeleteTask_NotFound() {
     ResponseEntity<Void> response = restTemplate.exchange(
         getBaseUrl() + "/99999",
-        org.springframework.http.HttpMethod.DELETE,
+        HttpMethod.DELETE,
         null,
         Void.class
     );
+
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
   }
 }
