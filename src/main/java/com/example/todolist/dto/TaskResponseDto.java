@@ -16,7 +16,6 @@ public class TaskResponseDto {
   private Priority priority;
   private Set<String> tags;
 
-  // Геттеры
   public Long getId() { return id; }
   public String getTitle() { return title; }
   public String getDescription() { return description; }
@@ -26,7 +25,6 @@ public class TaskResponseDto {
   public Priority getPriority() { return priority; }
   public Set<String> getTags() { return tags; }
 
-  // Сеттеры
   public void setId(Long id) { this.id = id; }
   public void setTitle(String title) { this.title = title; }
   public void setDescription(String description) { this.description = description; }

@@ -23,7 +23,7 @@ public class PreferencesController {
       HttpServletResponse response) {
     Cookie cookie = new Cookie(VIEW_PREFERENCE_COOKIE, mode);
     cookie.setPath("/");
-    cookie.setMaxAge(60 * 60 * 24 * 365); // 1 год
+    cookie.setMaxAge(60 * 60 * 24 * 365);
     response.addCookie(cookie);
     return ResponseEntity.ok().build();
   }

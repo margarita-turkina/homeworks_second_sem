@@ -61,7 +61,7 @@ public class TaskController {
       taskService.getTaskById(id);
       taskService.deleteTask(id);
       return ResponseEntity.noContent().build();
-    } catch (RuntimeException e) {
+    } catch (com.example.todolist.exception.TaskNotFoundException e) {
       return ResponseEntity.notFound().build();
     }
   }

@@ -14,7 +14,6 @@ public class TaskUpdateDto {
   private Priority priority;
   private Set<String> tags;
 
-  // Геттеры
   public String getTitle() { return title; }
   public String getDescription() { return description; }
   public Boolean getCompleted() { return completed; }
@@ -22,7 +21,6 @@ public class TaskUpdateDto {
   public Priority getPriority() { return priority; }
   public Set<String> getTags() { return tags; }
 
-  // Сеттеры
   public void setTitle(String title) { this.title = title; }
   public void setDescription(String description) { this.description = description; }
   public void setCompleted(Boolean completed) { this.completed = completed; }

@@ -1,0 +1,16 @@
+stages:
+  - test
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
+cache:
+  paths:
+    - .m2/repository
+
+test:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - chmod +x mvnw
+    - ./mvnw -B test -Dspring.profiles.active=test

@@ -1,7 +1,5 @@
 package com.example.todolist.config;
 
-import com.example.todolist.repository.StubTaksRepository;
-import com.example.todolist.repository.TaskRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.context.annotation.RequestScope;
@@ -11,11 +9,6 @@ import java.util.UUID;
 
 @Configuration
 public class Config {
-
-  @Bean
-  public TaskRepository stubTaskRepository() {
-    return new StubTaksRepository();
-  }
 
   @Bean
   @RequestScope
@@ -33,7 +26,12 @@ public class Config {
       System.out.println("Создан RequestScopedBean для запроса: " + requestId);
     }
 
-    public String getRequestId() { return requestId; }
-    public LocalDateTime getStartTime() { return startTime; }
+    public String getRequestId() {
+      return requestId;
+    }
+
+    public LocalDateTime getStartTime() {
+      return startTime;
+    }
   }
 }
