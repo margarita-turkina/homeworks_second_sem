@@ -13,14 +13,12 @@ public class TaskCreateDto {
   private Priority priority;
   private Set<String> tags;
 
-  // Геттеры
   public String getTitle() { return title; }
   public String getDescription() { return description; }
   public LocalDate getDueDate() { return dueDate; }
   public Priority getPriority() { return priority; }
   public Set<String> getTags() { return tags; }
 
-  // Сеттеры
   public void setTitle(String title) { this.title = title; }
   public void setDescription(String description) { this.description = description; }
   public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }

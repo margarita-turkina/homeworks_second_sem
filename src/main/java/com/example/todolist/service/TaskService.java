@@ -1,80 +1,93 @@
 package com.example.todolist.service;
 
-
 import com.example.todolist.exception.TaskNotFoundException;
 import com.example.todolist.model.Task;
 import com.example.todolist.repository.TaskRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class TaskService {
 
   private final TaskRepository taskRepository;
-  private final Map<Long, Task> taskCache = new ConcurrentHashMap<>();
 
-  @Autowired
   public TaskService(TaskRepository taskRepository) {
     this.taskRepository = taskRepository;
   }
 
-  @PostConstruct
-  public void initCache() {
-    System.out.println("=== @PostConstruct: Инициализация кэша ===");
-    List<Task> allTasks = taskRepository.findAll();
-    for (Task task : allTasks) {
-      taskCache.put(task.getId(), task);
-    }
-    System.out.println("Загружено задач в кэш: " + taskCache.size());
-  }
-
-  @PreDestroy
-  public void cleanup() {
-    System.out.println("=== @PreDestroy: Очистка ресурсов ===");
-    System.out.println("Кэш содержит задач: " + taskCache.size());
-    taskCache.clear();
-    System.out.println("Кэш очищен");
-  }
-
-
+  @Transactional
   public Task createTask(Task task) {
-    Task saved = taskRepository.save(task);
-    taskCache.put(saved.getId(), saved);
-    return saved;
-  }
-
-  public Task getTaskById(Long id) {
-    Task cached = taskCache.get(id);
-    if (cached != null) {
-      return cached;
+    if (task.getPriority() == null) {
+      task.setPriority(com.example.todolist.model.Priority.MEDIUM);
     }
-    return taskRepository.findById(id)
-        .orElseThrow(() -> new TaskNotFoundException(id));  // ← ИСПРАВЛЕНО
+    if (task.getTags() == null) {
+      task.setTags(new java.util.HashSet<>());
+    }
+    return taskRepository.save(task);
   }
 
+  @Transactional(readOnly = true)
+  public Task getTaskById(Long id) {
+    return taskRepository.findById(id)
+        .orElseThrow(() -> new TaskNotFoundException(id));
+  }
+
+  @Transactional(readOnly = true)
   public List<Task> getAllTasks() {
     return taskRepository.findAll();
   }
 
-  public Task updateTask(Long id, Task task) {
-    if (!taskRepository.existsById(id)) {
-      throw new RuntimeException("Task не найдена с id: " + id);
-    }
-    task.setId(id);
-    Task updated = taskRepository.update(task);
-    taskCache.put(id, updated);
-    return updated;
+  @Transactional(readOnly = true)
+  public List<Task> getAllTasksWithAttachments() {
+    return taskRepository.findAllWithAttachments();
   }
 
+  @Transactional
+  public Task updateTask(Long id, Task task) {
+    Task existing = taskRepository.findById(id)
+        .orElseThrow(() -> new TaskNotFoundException(id));
+    existing.setTitle(task.getTitle());
+    existing.setDescription(task.getDescription());
+    existing.setCompleted(task.isCompleted());
+    existing.setDueDate(task.getDueDate());
+    existing.setPriority(task.getPriority());
+    existing.setTags(task.getTags());
+    return taskRepository.save(existing);
+  }
+
+  @Transactional
   public void deleteTask(Long id) {
+    if (!taskRepository.existsById(id)) {
+      throw new TaskNotFoundException(id);
+    }
     taskRepository.deleteById(id);
-    taskCache.remove(id);
+  }
+
+  @Transactional(readOnly = true)
+  public List<Task> findByCompletedAndPriority(boolean completed, com.example.todolist.model.Priority priority) {
+    return taskRepository.findByCompletedAndPriority(completed, priority);
+  }
+
+  @Transactional(readOnly = true)
+  public List<Task> findTasksDueWithinNext7Days() {
+    LocalDate endDate = LocalDate.now().plusDays(7);
+    return taskRepository.findTasksDueWithinDays(endDate);
+  }
+
+  @Transactional(
+      rollbackFor = Exception.class,
+      propagation = Propagation.REQUIRED
+  )
+  public void bulkCompleteTasks(List<Long> ids) {
+    for (Long id : ids) {
+      Task task = taskRepository.findById(id)
+          .orElseThrow(() -> new TaskNotFoundException(id));
+      task.setCompleted(true);
+      taskRepository.save(task);
+    }
   }
 }

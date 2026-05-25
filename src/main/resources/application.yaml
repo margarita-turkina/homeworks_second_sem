@@ -1,3 +1,6 @@
+server:
+  port: 8080
+
 spring:
   profiles:
     active: dev
@@ -5,6 +8,11 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+  jpa:
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
 
 app:
   name: To-Do List Manager
@@ -12,6 +20,3 @@ app:
   api:
     version: 2.0.0
   upload-dir: uploads
-
-server:
-  port: 8080

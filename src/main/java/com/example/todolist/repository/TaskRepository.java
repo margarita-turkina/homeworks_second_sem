@@ -1,20 +1,28 @@
 package com.example.todolist.repository;
 
+import com.example.todolist.model.Priority;
 import com.example.todolist.model.Task;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
-public interface TaskRepository {
+public interface TaskRepository extends JpaRepository<Task, Long> {
 
-  Task save(Task task);
+  List<Task> findByCompletedAndPriority(boolean completed, Priority priority);
 
-  Optional<Task> findById(Long id);
+  @Query("""
+      SELECT t FROM Task t
+      WHERE t.dueDate IS NOT NULL
+        AND t.dueDate >= CURRENT_DATE
+        AND t.dueDate <= :endDate
+      """)
+  List<Task> findTasksDueWithinDays(@Param("endDate") LocalDate endDate);
 
-  List<Task> findAll();
-
-  Task update(Task task);
-
-  void deleteById(Long id);
-
-  boolean existsById(Long id);
+  @EntityGraph(attributePaths = "attachments")
+  @Query("SELECT DISTINCT t FROM Task t")
+  List<Task> findAllWithAttachments();
 }

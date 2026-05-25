@@ -1,13 +1,16 @@
 package com.example.todolist.service;
 
-
+import com.example.todolist.exception.TaskNotFoundException;
+import com.example.todolist.model.Task;
 import com.example.todolist.model.TaskAttachment;
 import com.example.todolist.repository.TaskAttachmentRepository;
+import com.example.todolist.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -24,24 +27,28 @@ import java.util.UUID;
 public class AttachmentService {
 
   private final TaskAttachmentRepository attachmentRepository;
+  private final TaskRepository taskRepository;
 
   @Value("${app.upload-dir:uploads}")
   private String uploadDir;
 
+  @Transactional
   public TaskAttachment storeAttachment(Long taskId, MultipartFile file) throws IOException {
+    Task task = taskRepository.findById(taskId)
+        .orElseThrow(() -> new TaskNotFoundException(taskId));
+
     Path uploadPath = Paths.get(uploadDir);
     if (!Files.exists(uploadPath)) {
       Files.createDirectories(uploadPath);
     }
 
     String originalName = file.getOriginalFilename();
-    String storedName = UUID.randomUUID().toString() + "_" + originalName;
+    String storedName = UUID.randomUUID() + "_" + originalName;
     Path filePath = uploadPath.resolve(storedName);
-
     file.transferTo(filePath.toFile());
 
     TaskAttachment attachment = new TaskAttachment();
-    attachment.setTaskId(taskId);
+    attachment.setTask(task);
     attachment.setFileName(originalName);
     attachment.setStoredFileName(storedName);
     attachment.setContentType(file.getContentType());
@@ -51,10 +58,12 @@ public class AttachmentService {
     return attachmentRepository.save(attachment);
   }
 
+  @Transactional(readOnly = true)
   public Optional<TaskAttachment> getAttachment(Long attachmentId) {
     return attachmentRepository.findById(attachmentId);
   }
 
+  @Transactional(readOnly = true)
   public Resource loadAsResource(Long attachmentId) throws IOException {
     TaskAttachment attachment = attachmentRepository.findById(attachmentId)
         .orElseThrow(() -> new RuntimeException("Attachment not found"));
@@ -68,6 +77,7 @@ public class AttachmentService {
     throw new RuntimeException("File not found");
   }
 
+  @Transactional
   public void deleteAttachment(Long attachmentId) throws IOException {
     TaskAttachment attachment = attachmentRepository.findById(attachmentId)
         .orElseThrow(() -> new RuntimeException("Attachment not found"));
@@ -78,7 +88,8 @@ public class AttachmentService {
     attachmentRepository.deleteById(attachmentId);
   }
 
+  @Transactional(readOnly = true)
   public List<TaskAttachment> getAttachmentsByTaskId(Long taskId) {
-    return attachmentRepository.findByTaskId(taskId);
+    return attachmentRepository.findByTask_Id(taskId);
   }
 }
