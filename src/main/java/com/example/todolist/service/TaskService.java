@@ -65,7 +65,7 @@ public class TaskService {
 
   public Task updateTask(Long id, Task task) {
     if (!taskRepository.existsById(id)) {
-      throw new RuntimeException("Task не найдена с id: " + id);
+      throw new TaskNotFoundException(id);
     }
     task.setId(id);
     Task updated = taskRepository.update(task);

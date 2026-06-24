@@ -49,6 +49,8 @@ public class TaskControllerTest {
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
+    assertThat(response.getHeaders().getFirst("X-Total-Count")).isNotNull();
+    assertThat(response.getHeaders().getFirst("X-API-Version")).isEqualTo("2.0.0");
   }
 
   @Test
@@ -61,13 +63,14 @@ public class TaskControllerTest {
 
   @Test
   public void testDeleteTask_NotFound() {
-    ResponseEntity<Void> response = restTemplate.exchange(
+    ResponseEntity<ErrorResponse> response = restTemplate.exchange(
         getBaseUrl() + "/99999",
         HttpMethod.DELETE,
         null,
-        Void.class
+        ErrorResponse.class
     );
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    assertThat(response.getBody()).isNotNull();
   }
 }

@@ -5,6 +5,8 @@ import com.example.todolist.dto.TaskResponseDto;
 import com.example.todolist.dto.TaskMapper;
 import com.example.todolist.service.FavoritesService;
 import com.example.todolist.service.TaskService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/favorites")
 @RequiredArgsConstructor
+@Tag(name = "Favorites", description = "Избранные задачи")
 public class FavoritesController {
 
   private final FavoritesService favoritesService;
@@ -24,6 +27,7 @@ public class FavoritesController {
   private final TaskMapper taskMapper;
 
   @PostMapping("/{taskId}")
+  @Operation(summary = "Добавить задачу в избранное")
   public ResponseEntity<Void> addFavorite(@PathVariable Long taskId, HttpSession session) {
     favoritesService.addFavorite(taskId, session);
     return ResponseEntity.ok().build();

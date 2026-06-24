@@ -1,10 +1,13 @@
 package com.example.todolist.repository;
 
+import com.example.todolist.model.Priority;
 import com.example.todolist.model.Task;
-import org.springframework.stereotype.Repository;
 import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,13 +19,21 @@ import java.util.concurrent.atomic.AtomicLong;
 public class InMemoryTaskRepository implements TaskRepository {
 
   private final Map<Long, Task> storage = new ConcurrentHashMap<>();
-
   private final AtomicLong idGenerator = new AtomicLong(1);
 
   @Override
   public Task save(Task task) {
     Long newId = idGenerator.getAndIncrement();
-    Task newTask = new Task(newId, task.getTitle(), task.getDescription(), task.isCompleted());
+    Task newTask = new Task(
+        newId,
+        task.getTitle(),
+        task.getDescription(),
+        task.isCompleted(),
+        task.getCreatedAt() != null ? task.getCreatedAt() : LocalDateTime.now(),
+        task.getDueDate(),
+        task.getPriority() != null ? task.getPriority() : Priority.MEDIUM,
+        task.getTags() != null ? task.getTags() : new HashSet<>()
+    );
     storage.put(newId, newTask);
     return newTask;
   }
